@@ -1,0 +1,56 @@
+---
+- name: Install Infrastructure
+  hosts: all
+  tasks:
+    - name: Add signing key
+      ansible.builtin.rpm_key:
+        key: "https://download.docker.com/linux/centos/gpg"
+        state: present
+    - name: Add repository into repo.d list
+      ansible.builtin.yum_repository:
+        name: docker
+        description: docker repository
+        baseurl: "https://download.docker.com/linux/centos/$releasever/$basearch/stable"
+        enabled: true
+        gpgcheck: true
+        gpgkey: "https://download.docker.com/linux/centos/gpg"
+    - name: Install Packages
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+          - git
+          - python-docker
+          - python3-pip
+        state: present
+        update_cache: true
+    - name: Start Docker
+      ansible.builtin.service:
+        name: "docker"
+        enabled: true
+        state: started
+    - name: Clone Git Repo
+      ansible.builtin.git:
+        repo: https://github.com/nyanmark/sharxdc.git
+        dest: /opt/app
+        clone: yes
+        update: yes
+    - name: Build image and with build args
+      community.docker.docker_image:
+        name: test-project:v1
+        build:
+          path: /opt/app
+        source: build
+        state: present
+    - name: Run docker containerd
+      community.docker.docker_container:
+        name: webserver
+        image: test-project:v1
+        state: started
+        ports:
+          - "8081:8081"
+    - name: Check if website is alive
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8081
