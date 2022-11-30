@@ -14,7 +14,7 @@
         enabled: true
         gpgcheck: true
         gpgkey: "https://download.docker.com/linux/centos/gpg"
-    - name: Install Docker
+    - name: Install Packages
       ansible.builtin.yum:
         name:
           - docker-ce
@@ -25,7 +25,7 @@
           - python3-pip
         state: present
         update_cache: true
-    - name: Install bottle python package
+    - name: Install docker-py python package
       ansible.builtin.pip:
         name: docker-py
     - name: Start Docker
@@ -37,7 +37,8 @@
       ansible.builtin.git:
         repo: https://github.com/nyanmark/sharxdc.git
         dest: /opt/app
-        version: latest
+        clone: yes
+        update: yes
     - name: Build image and with build args
       community.docker.docker_image:
         name: test-project:v1
@@ -49,7 +50,7 @@
       community.docker.docker_container:
         name: webserver
         image: test-project:v1
-        state: present
+        state: started
         ports:
           - "8081:8081"
     - name: Check if website is alive
