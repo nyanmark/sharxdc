@@ -22,8 +22,12 @@
           - containerd.io
           - docker-compose-plugin
           - git
+          - python3-pip
         state: present
         update_cache: true
+    - name: Install bottle python package
+      ansible.builtin.pip:
+        name: docker-py
     - name: Start Docker
       ansible.builtin.service:
         name: "docker"
